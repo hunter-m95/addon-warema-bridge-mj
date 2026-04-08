@@ -14,6 +14,7 @@ const MQTT_TOPICS = {
   waremaSetCommand: 'warema/+/set',
   waremaSetPositionCommand: 'warema/+/set_position',
   waremaSetTiltCommand: 'warema/+/set_tilt',
+  waremaSetFavouriteCommand: 'warema/+/set_favourite',
   homeAssistantStatus: 'homeassistant/status',
 };
 
@@ -389,11 +390,15 @@ let stickUsb;
 const resolveCurrentPosition = (serialNumber) => shadePosition[serialNumber]?.position;
 const resolveCurrentAngle = (serialNumber) => shadePosition[serialNumber]?.angle;
 
-const handleSetCommand = (deviceId, command) => {
+const handleSetCommand = (deviceId, serialNumber, command) => {
   if (command === 'CLOSE') {
-    stickUsb.vnBlindSetPosition(deviceId, 100);
+    const currentAngle = resolveCurrentAngle(serialNumber);
+    const angle = currentAngle !== undefined ? Number.parseInt(currentAngle, 10) : 100;
+    stickUsb.vnBlindSetPosition(deviceId, 100, angle);
   } else if (command === 'OPEN') {
-    stickUsb.vnBlindSetPosition(deviceId, 0);
+    const currentAngle = resolveCurrentAngle(serialNumber);
+    const angle = currentAngle !== undefined ? Number.parseInt(currentAngle, 10) : -100;
+    stickUsb.vnBlindSetPosition(deviceId, 0, angle);
   } else if (command === 'STOP') {
     stickUsb.vnBlindStop(deviceId);
   }
@@ -429,7 +434,7 @@ const handleWaremaMessage = (topic, message) => {
 
   switch (command) {
     case 'set':
-      handleSetCommand(deviceId, stringMessage);
+      handleSetCommand(deviceId, serialNumber, stringMessage);
       break;
     case 'set_position': {
       const currentAngle = resolveCurrentAngle(serialNumber);
@@ -451,6 +456,25 @@ const handleWaremaMessage = (topic, message) => {
       }
       break;
     }
+    case 'set_favourite': {
+      // Payload format: {"position": 50, "tilt": 0}
+      let parsed;
+      try {
+        parsed = JSON.parse(message.toString().trim());
+      } catch {
+        log('warning', `Ignoring invalid JSON in set_favourite for ${serialNumber}: ${message}`);
+        break;
+      }
+      const favPosition = parseNumericPayload(String(parsed.position), 0, 100);
+      const favAngle = parseNumericPayload(String(parsed.tilt), -100, 100);
+      if (favPosition === null || favAngle === null) {
+        log('warning', `Ignoring invalid favourite values for ${serialNumber}: ${message}`);
+        break;
+      }
+      log('info', `Setting favourite for ${serialNumber}: pos=${favPosition}, tilt=${favAngle}`);
+      stickUsb.vnBlindSetPosition(deviceId, favPosition, favAngle);
+      break;
+    }
     default:
       break;
   }
@@ -462,6 +486,7 @@ client.on('connect', () => {
   client.subscribe(MQTT_TOPICS.waremaSetCommand);
   client.subscribe(MQTT_TOPICS.waremaSetPositionCommand);
   client.subscribe(MQTT_TOPICS.waremaSetTiltCommand);
+  client.subscribe(MQTT_TOPICS.waremaSetFavouriteCommand);
   client.subscribe(MQTT_TOPICS.homeAssistantStatus);
 
   stickUsb = new WaremaWmsVenetianBlinds(

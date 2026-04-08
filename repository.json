@@ -1,8 +1,8 @@
 {
-  "name": "Warema WMS Bridge Add-on",
-  "url": "https://github.com/chha25/addon-warema-bridge",
-  "maintainer": "chha25",
-  "slug": "addon-warema-bridge",
+  "name": "Warema WMS Bridge Add-on MJ",
+  "url": "https://github.com/hunter-m95/addon-warema-bridge-mj",
+  "maintainer": "hunter-m95",
+  "slug": "addon-warema-bridge-mj",
   "type": "addon",
-  "version": "2.1.4"
+  "version": "2.1.4a"
 }

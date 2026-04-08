@@ -1,6 +1,6 @@
 ---
 name: Warema WMS Bridge MJ
-version: "2.1.4a"
+version: "2.1.4b"
 slug: addon-warema-bridge
 description: "Bridge for Warema WMS devices with MQTT support"
 url: "https://github.com/hunter-m95/addon-warema-bridge-mj"

@@ -392,13 +392,9 @@ const resolveCurrentAngle = (serialNumber) => shadePosition[serialNumber]?.angle
 
 const handleSetCommand = (deviceId, serialNumber, command) => {
   if (command === 'CLOSE') {
-    const currentAngle = resolveCurrentAngle(serialNumber);
-    const angle = currentAngle !== undefined ? Number.parseInt(currentAngle, 10) : 100;
-    stickUsb.vnBlindSetPosition(deviceId, 100, angle);
+    stickUsb.vnBlindSetPosition(deviceId, 100, 100);
   } else if (command === 'OPEN') {
-    const currentAngle = resolveCurrentAngle(serialNumber);
-    const angle = currentAngle !== undefined ? Number.parseInt(currentAngle, 10) : -100;
-    stickUsb.vnBlindSetPosition(deviceId, 0, angle);
+    stickUsb.vnBlindSetPosition(deviceId, 0, -100);
   } else if (command === 'STOP') {
     stickUsb.vnBlindStop(deviceId);
   }
